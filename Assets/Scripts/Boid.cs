@@ -1,18 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Boid : MonoBehaviour
 {
     [Header("Set Dynamically")]
     public Rigidbody rigid;
 
-    private Neighborhood neighborhood;
+    private Neighborhood _neighborhood;
 
 
     void Awake()
     {
-        neighborhood = GetComponent<Neighborhood>();    
+        _neighborhood = GetComponent<Neighborhood>();    
         rigid = GetComponent<Rigidbody>();
 
         // Выбрать случайную начальную позицию
@@ -58,7 +56,7 @@ public class Boid : MonoBehaviour
 
         // ПРЕДОТВРАЩЕНИЕ СТОЛКНОВЕНИЙ - избегать близких соседей
         Vector3 velAvoid = Vector3.zero;
-        Vector3 tooClosePos = neighborhood.avgClosePos;
+        Vector3 tooClosePos = _neighborhood.avgClosePos;
         // Если получен вектор Vector3.zero, ничего предпринимать не надо
         if(tooClosePos != Vector3.zero)
         {
@@ -68,7 +66,7 @@ public class Boid : MonoBehaviour
         }
 
         // СОГЛАСОВАНИЕ СКОРОСТИ - попробовать согласовать скорость с соседями
-        Vector3 velAlign = neighborhood.avgVel;
+        Vector3 velAlign = _neighborhood.avgVel;
         // Согласование требуется, только если velAlign не равно Vector3.zero
         if(velAlign != Vector3.zero)
         {
@@ -79,7 +77,7 @@ public class Boid : MonoBehaviour
         }
 
         // КОНЦЕНТРАЦИЯ СОСЕДЕЙ - движение в сторону центра группы соседей
-        Vector3 velCenter = neighborhood.avgPos;
+        Vector3 velCenter = _neighborhood.avgPos;
         if(velCenter != Vector3.zero)
         {
             velCenter -= transform.position;

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
@@ -35,13 +34,17 @@ public class Spawner : MonoBehaviour
         S = this;
         // Запустить создание объектов Boid
         boids = new List<Boid>();
+    }
+
+    private void Start()
+    {
         InstantiateBoid();
     }
 
-    public void InstantiateBoid()
+    private void InstantiateBoid()
     {
-        GameObject go = Instantiate(boidPrefab);
-        Boid b = go.GetComponent<Boid>();
+        GameObject boid = Instantiate(boidPrefab);
+        Boid b = boid.GetComponent<Boid>();
         b.transform.SetParent(boidAnchor);
         boids.Add(b);
         if(boids.Count < numBoids )
