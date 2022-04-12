@@ -7,19 +7,22 @@ public class Neighborhood : MonoBehaviour
     public List<Boid> neighbors;
     private SphereCollider coll;
 
+    private float _neighborDist = 30f;
+    private float _collDist = 4f;
+
 
     void Start()
     {
         neighbors = new List<Boid>();
         coll = GetComponent<SphereCollider>();
-        coll.radius = Spawner.S.neighborDist / 2;
+        coll.radius = _neighborDist / 2;
     }
 
     void FixedUpdate()
     {
-        if(coll.radius != Spawner.S.neighborDist/2)
+        if(coll.radius != _neighborDist/2)
         {
-            coll.radius = Spawner.S.neighborDist / 2;
+            coll.radius = _neighborDist / 2;
         }
     }
 
@@ -95,7 +98,7 @@ public class Neighborhood : MonoBehaviour
             for(int i = 0; i < neighbors.Count;i++)
             {
                 delta = neighbors[i].pos - transform.position;
-                if(delta.magnitude <= Spawner.S.collDist)
+                if(delta.magnitude <= _collDist)
                 {
                     avg += neighbors[i].pos;
                     nearCount++;

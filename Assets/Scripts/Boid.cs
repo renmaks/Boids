@@ -2,57 +2,31 @@
 
 public class Boid : MonoBehaviour
 {
-    [Header("Set Dynamically")]
-    public Rigidbody rigid;
-
+    private Rigidbody _rigid;
     private Neighborhood _neighborhood;
+    private float _velocity = 30f;
+    private float _velMatching = 0.25f;
+    private float _flockCentering = 0.2f;
+    private float _collAvoid = 2f;
+    private float _attractPull = 2f;
+    private float _attractPush = 2f;
+    private float _attractPushDist = 5f;
 
 
-    void Awake()
+    private void Awake()
     {
         _neighborhood = GetComponent<Neighborhood>();    
-        rigid = GetComponent<Rigidbody>();
+        _rigid = GetComponent<Rigidbody>();
 
-        // Выбрать случайную начальную позицию
-        pos = Random.insideUnitSphere * Spawner.S.spawnRadius;
-
-        // Выбрать случайную начальную скорость
-        Vector3 vel = Random.onUnitSphere * Spawner.S.velocity;
-        rigid.velocity = vel;
-
+        ChooseStartPosition();
+        ChooseStartVelocity();
         LookAhead();
-
-        // Окрасить птицу в случайный цвет, но не слишком тёмный
-        Color randColor = Color.black;
-        while(randColor.r + randColor.g + randColor.b < 1.0f)
-        {
-            randColor = new Color(Random.value, Random.value, Random.value);
-        }
-        Renderer[] rends = gameObject.GetComponentsInChildren<Renderer>();
-        foreach(Renderer r in rends)
-        {
-            r.material.color = randColor;
-        }
-        TrailRenderer tRend = GetComponent<TrailRenderer>();
-        tRend.material.SetColor("_TintColor", randColor);
+        ChooseColorOfBoid();
     }
 
-    void LookAhead()
+     private void FixedUpdate()
     {
-        // Ориентировать птицу клювом в направлении полёта
-        transform.LookAt(pos + rigid.velocity);
-    }
-
-    public Vector3 pos
-    {
-        get { return transform.position; }
-        set { transform.position = value; }
-    }
-
-     void FixedUpdate()
-    {
-        Vector3 vel = rigid.velocity;
-        Spawner spn = Spawner.S;
+        Vector3 vel = _rigid.velocity;
 
         // ПРЕДОТВРАЩЕНИЕ СТОЛКНОВЕНИЙ - избегать близких соседей
         Vector3 velAvoid = Vector3.zero;
@@ -62,7 +36,7 @@ public class Boid : MonoBehaviour
         {
             velAvoid = pos - tooClosePos;
             velAvoid.Normalize();
-            velAvoid *= spn.velocity;
+            velAvoid *= _velocity;
         }
 
         // СОГЛАСОВАНИЕ СКОРОСТИ - попробовать согласовать скорость с соседями
@@ -73,7 +47,7 @@ public class Boid : MonoBehaviour
             // Нас интересует только направление, поэтому нормализуем скорость
             velAlign.Normalize();
             // и затем преобразуем в выбранную скорость
-            velAlign *= spn.velocity;
+            velAlign *= _velocity;
         }
 
         // КОНЦЕНТРАЦИЯ СОСЕДЕЙ - движение в сторону центра группы соседей
@@ -82,49 +56,94 @@ public class Boid : MonoBehaviour
         {
             velCenter -= transform.position;
             velCenter.Normalize();
-            velCenter *= spn.velocity;
+            velCenter *= _velocity;
         }
 
         // ПРИТЯЖЕНИЕ - организовать движение в сторону объекта Attractor
         Vector3 delta = Attractor.POS - pos;
         // Проверить, куда двигаться, в сторону Attractor или от него
-        bool attracted = (delta.magnitude > spn.attractPushDist);
-        Vector3 velAttract = delta.normalized * spn.velocity;
+        bool attracted = (delta.magnitude > _attractPushDist);
+        Vector3 velAttract = delta.normalized * _velocity;
 
         // Применить все скорости
         float fdt = Time.fixedDeltaTime;
         if(velAvoid != Vector3.zero)
         {
-            vel = Vector3.Lerp(vel, velAvoid, spn.collAvoid * fdt);
+            vel = Vector3.Lerp(vel, velAvoid, _collAvoid * fdt);
         }
         else
         {
             if(velAlign != Vector3.zero)
             {
-                vel = Vector3.Lerp(vel, velAlign, spn.velMatching * fdt);
+                vel = Vector3.Lerp(vel, velAlign, _velMatching * fdt);
             }
             if(velCenter != Vector3.zero)
             {
-                vel = Vector3.Lerp(vel, velAlign, spn.flockCentering * fdt);
+                vel = Vector3.Lerp(vel, velAlign, _flockCentering * fdt);
             }
             if(velAttract != Vector3.zero)
             {
                 if (attracted)
                 {
-                    vel = Vector3.Lerp(vel, velAttract, spn.attractPull * fdt);
+                    vel = Vector3.Lerp(vel, velAttract, _attractPull * fdt);
                 }
                 else
                 {
-                    vel = Vector3.Lerp(vel, -velAttract, spn.attractPush * fdt);
+                    vel = Vector3.Lerp(vel, -velAttract, _attractPush * fdt);
                 }
             }
         }
 
         // Установить vel в соответствии с velocity в объекте-одиночке Spawner
-        vel = vel.normalized * spn.velocity;
+        vel = vel.normalized * _velocity;
         // В заключение присвоить скорость компоненту RigidBody
-        rigid.velocity = vel;
+        _rigid.velocity = vel;
         // Повернуть птицу клювом в сторону нового направления движения
         LookAhead();
+    }
+    
+    private void ChooseColorOfBoid()
+    {
+        Color randColor = Color.black;
+        while (randColor.r + randColor.g + randColor.b < 1.0f)
+        {
+            randColor = new Color(Random.value, Random.value, Random.value);
+        }
+        Renderer[] rends = gameObject.GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in rends)
+        {
+            r.material.color = randColor;
+        }
+        TrailRenderer tRend = GetComponent<TrailRenderer>();
+        tRend.material.SetColor("_TintColor", randColor);
+    }
+
+    private void ChooseStartPosition()
+    {
+        pos = Random.insideUnitSphere * Spawner.SPAWN_RADIUS;
+    }
+
+    private void ChooseStartVelocity()
+    {
+        Vector3 vel = Random.onUnitSphere * _velocity;
+        _rigid.velocity = vel;
+    }
+
+    private void LookAhead()
+    {
+        // Ориентировать птицу клювом в направлении полёта
+        transform.LookAt(pos + _rigid.velocity);
+    }
+
+    public Rigidbody rigid
+    {
+        get { return _rigid; }
+        private set { }
+    }
+
+    public Vector3 pos
+    {
+        get { return transform.position; }
+        private set { }
     }
 }
