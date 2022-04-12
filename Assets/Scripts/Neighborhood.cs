@@ -3,104 +3,103 @@ using UnityEngine;
 
 public class Neighborhood : MonoBehaviour
 {
-    [Header("Set Dynamically")]
-    public List<Boid> neighbors;
-    private SphereCollider coll;
+    private List<Boid> _neighbors;
+    private SphereCollider _collider;
+    private float _neighborDistance = 30f;
+    private float _colliderDistance = 4f;
 
-    private float _neighborDist = 30f;
-    private float _collDist = 4f;
-
-
-    void Start()
+    private void Awake()
     {
-        neighbors = new List<Boid>();
-        coll = GetComponent<SphereCollider>();
-        coll.radius = _neighborDist / 2;
+        _neighbors = new List<Boid>();        
+        _collider = GetComponent<SphereCollider>();
+        _collider.radius = _neighborDistance / 2;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        if(coll.radius != _neighborDist/2)
+        if(_collider.radius != _neighborDistance/2)
         {
-            coll.radius = _neighborDist / 2;
+            _collider.radius = _neighborDistance / 2;
         }
     }
 
-     void OnTriggerEnter(Collider other)
+     private void OnTriggerEnter(Collider other)
     {
         Boid b = other.GetComponent<Boid>();
         if(b != null)
         {
-            if(neighbors.IndexOf(b) == -1)
+            if(_neighbors.IndexOf(b) == -1)
             {
-                neighbors.Add(b);
+                _neighbors.Add(b);
             }
         }
     }
 
-     void OnTriggerExit(Collider other)
+     private void OnTriggerExit(Collider other)
     {
         Boid b = other.GetComponent<Boid>();
         if (b!=null)
         {
-            if(neighbors.IndexOf(b) != -1)
+            if(_neighbors.IndexOf(b) != -1)
             {
-                neighbors.Remove(b);
+                _neighbors.Remove(b);
             }
         }
     }
 
-    public Vector3 avgPos
+    public Vector3 averagePosition
     {
         get
         {
             Vector3 avg = Vector3.zero;
-            if(neighbors.Count == 0)
+            if(_neighbors.Count == 0)
             {
                 return avg;
             }
-            for(int i = 0; i<neighbors.Count; i++)
+            for(int i = 0; i<_neighbors.Count; i++)
             {
-                avg += neighbors[i].pos;
+                avg += _neighbors[i].pos;
             }
-            avg /= neighbors.Count;
+            avg /= _neighbors.Count;
 
             return avg;
         }
+        private set { }
     }
 
-    public Vector3 avgVel
+    public Vector3 averageVelocity
     {
         get
         {
             Vector3 avg = Vector3.zero;
-            if(neighbors.Count == 0)
+            if(_neighbors.Count == 0)
             {
                 return avg;
             }
-            for(int i = 0; i<neighbors.Count; i++)
+            for(int i = 0; i<_neighbors.Count; i++)
             {
-                avg += neighbors[i].rigid.velocity;
+                avg += _neighbors[i].rigid.velocity;
             }
-            avg /= neighbors.Count;
+            avg /= _neighbors.Count;
 
             return avg;
         }
+        private set { }
     }
 
-    public Vector3 avgClosePos
+    public Vector3 averageClosePosition
     {
         get
         {
             Vector3 avg = Vector3.zero;
             Vector3 delta;
             int nearCount = 0;
-            for(int i = 0; i < neighbors.Count;i++)
+            for(int i = 0; i < _neighbors.Count;i++)
             {
-                delta = neighbors[i].pos - transform.position;
-                if(delta.magnitude <= _collDist)
+                delta = _neighbors[i].pos - transform.position;
+                if(delta.magnitude <= _colliderDistance)
                 {
-                    avg += neighbors[i].pos;
+                    avg += _neighbors[i].pos;
                     nearCount++;
                 }
             }
@@ -113,5 +112,6 @@ public class Neighborhood : MonoBehaviour
             avg /= nearCount;
             return avg;
         }
+        private set { }
     }
 }

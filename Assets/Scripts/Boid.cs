@@ -26,37 +26,37 @@ public class Boid : MonoBehaviour
 
      private void FixedUpdate()
     {
-        Vector3 vel = _rigid.velocity;
+        Vector3 velocity = _rigid.velocity;
 
         // ПРЕДОТВРАЩЕНИЕ СТОЛКНОВЕНИЙ - избегать близких соседей
-        Vector3 velAvoid = Vector3.zero;
-        Vector3 tooClosePos = _neighborhood.avgClosePos;
+        Vector3 velocityAvoid = Vector3.zero;
+        Vector3 tooClosePosition = _neighborhood.averageClosePosition;
         // Если получен вектор Vector3.zero, ничего предпринимать не надо
-        if(tooClosePos != Vector3.zero)
+        if(tooClosePosition != Vector3.zero)
         {
-            velAvoid = pos - tooClosePos;
-            velAvoid.Normalize();
-            velAvoid *= _velocity;
+            velocityAvoid = pos - tooClosePosition;
+            velocityAvoid.Normalize();
+            velocityAvoid *= _velocity;
         }
 
         // СОГЛАСОВАНИЕ СКОРОСТИ - попробовать согласовать скорость с соседями
-        Vector3 velAlign = _neighborhood.avgVel;
+        Vector3 velocityAlign = _neighborhood.averageVelocity;
         // Согласование требуется, только если velAlign не равно Vector3.zero
-        if(velAlign != Vector3.zero)
+        if(velocityAlign != Vector3.zero)
         {
             // Нас интересует только направление, поэтому нормализуем скорость
-            velAlign.Normalize();
+            velocityAlign.Normalize();
             // и затем преобразуем в выбранную скорость
-            velAlign *= _velocity;
+            velocityAlign *= _velocity;
         }
 
         // КОНЦЕНТРАЦИЯ СОСЕДЕЙ - движение в сторону центра группы соседей
-        Vector3 velCenter = _neighborhood.avgPos;
-        if(velCenter != Vector3.zero)
+        Vector3 velocityCenter = _neighborhood.averagePosition;
+        if(velocityCenter != Vector3.zero)
         {
-            velCenter -= transform.position;
-            velCenter.Normalize();
-            velCenter *= _velocity;
+            velocityCenter -= transform.position;
+            velocityCenter.Normalize();
+            velocityCenter *= _velocity;
         }
 
         // ПРИТЯЖЕНИЕ - организовать движение в сторону объекта Attractor
@@ -67,37 +67,37 @@ public class Boid : MonoBehaviour
 
         // Применить все скорости
         float fdt = Time.fixedDeltaTime;
-        if(velAvoid != Vector3.zero)
+        if(velocityAvoid != Vector3.zero)
         {
-            vel = Vector3.Lerp(vel, velAvoid, _collAvoid * fdt);
+            velocity = Vector3.Lerp(velocity, velocityAvoid, _collAvoid * fdt);
         }
         else
         {
-            if(velAlign != Vector3.zero)
+            if(velocityAlign != Vector3.zero)
             {
-                vel = Vector3.Lerp(vel, velAlign, _velMatching * fdt);
+                velocity = Vector3.Lerp(velocity, velocityAlign, _velMatching * fdt);
             }
-            if(velCenter != Vector3.zero)
+            if(velocityCenter != Vector3.zero)
             {
-                vel = Vector3.Lerp(vel, velAlign, _flockCentering * fdt);
+                velocity = Vector3.Lerp(velocity, velocityAlign, _flockCentering * fdt);
             }
             if(velAttract != Vector3.zero)
             {
                 if (attracted)
                 {
-                    vel = Vector3.Lerp(vel, velAttract, _attractPull * fdt);
+                    velocity = Vector3.Lerp(velocity, velAttract, _attractPull * fdt);
                 }
                 else
                 {
-                    vel = Vector3.Lerp(vel, -velAttract, _attractPush * fdt);
+                    velocity = Vector3.Lerp(velocity, -velAttract, _attractPush * fdt);
                 }
             }
         }
 
         // Установить vel в соответствии с velocity в объекте-одиночке Spawner
-        vel = vel.normalized * _velocity;
+        velocity = velocity.normalized * _velocity;
         // В заключение присвоить скорость компоненту RigidBody
-        _rigid.velocity = vel;
+        _rigid.velocity = velocity;
         // Повернуть птицу клювом в сторону нового направления движения
         LookAhead();
     }
@@ -144,6 +144,6 @@ public class Boid : MonoBehaviour
     public Vector3 pos
     {
         get { return transform.position; }
-        private set { }
+        private set { transform.position = value; }
     }
 }
